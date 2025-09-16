@@ -15,5 +15,9 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY","")
 JWT_ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
+FRONTEND_URL = os.getenv("FRONTEND_URL","http://localhost:8081")
+
+API_URL = os.getenv("API_URL","http://localhost:8000")
+
 def get_supabase_client() -> Client:
     return create_client(SUPABASE_URL, SUPABASE_KEY)
