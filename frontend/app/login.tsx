@@ -60,23 +60,27 @@ const LoginScreen = () => {
 
       if (result.type === 'success' && result.url) {
         console.log('Callback URL received:', result.url);
-        const url = new URL(result.url);
-        const token = url.searchParams.get('token');
-        const error = url.searchParams.get('error');
+        
+        // Para mobile (Expo Go), processar o token diretamente aqui
+        if (result.url.startsWith('exp://')) {
+          const url = new URL(result.url);
+          const token = url.searchParams.get('token');
+          const error = url.searchParams.get('error');
 
-        if (error) {
-          console.log('Authentication error:', error);
-          Alert.alert('Erro de Autenticação', 'Ocorreu um erro durante o login. Tente novamente.');
-          return;
-        }
+          if (error) {
+            console.log('Authentication error:', error);
+            Alert.alert('Erro de Autenticação', 'Ocorreu um erro durante o login. Tente novamente.');
+            return;
+          }
 
-        if (token) {
-          console.log('Token received, saving to storage');
-          await AsyncStorage.setItem('access_token', token);
-          router.replace('/home');
-        } else {
-          console.log('No token found in callback URL');
-          Alert.alert('Erro', 'Token de acesso não recebido.');
+          if (token) {
+            console.log('Token received, saving to storage');
+            await AsyncStorage.setItem('access_token', token);
+            router.replace('/home');
+          } else {
+            console.log('No token found in callback URL');
+            Alert.alert('Erro', 'Token de acesso não recebido.');
+          }
         }
       } else if (result.type === 'cancel') {
         console.log('User cancelled authentication');
