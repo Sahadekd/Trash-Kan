@@ -12,23 +12,37 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { getRedirectUrl, usePlatform } from '../hooks/usePlatform';
 
 WebBrowser.maybeCompleteAuthSession();
+const BACKEND_API_URL = process.env.EXPO_PUBLIC_BACKEND_API_URL;
+const FRONTEND_URL = process.env.EXPO_PUBLIC_FRONTEND_URL;
 
 const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-
+  const { isWeb, isMobile } = usePlatform();
+  
+  console.log('Backend API URL:', BACKEND_API_URL);
+  console.log('Frontend URL:', FRONTEND_URL);
+  console.log('Platform:', isWeb ? 'web' : 'mobile');
+  
   const handleGoogleLogin = async () => {
     try {
       setLoading(true);
-      
-      const response = await fetch('http://localhost:8000/auth/login', {
+
+      const redirectUrl = getRedirectUrl();
+      console.log('Using redirect URL:', redirectUrl);
+
+      const response = await fetch(`${BACKEND_API_URL}/auth/login?redirect_url=${encodeURIComponent(redirectUrl)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
         },
       });
+
+      console.log('Auth request made with redirect URL:', redirectUrl);
 
       if (!response.ok) {
         throw new Error('Failed to get auth URL');
@@ -39,23 +53,29 @@ const LoginScreen = () => {
 
       const result = await WebBrowser.openAuthSessionAsync(
         authUrl,
-        'http://localhost:8081/auth-callback' 
+        redirectUrl
       );
 
+      console.log('WebBrowser result:', result);
+
       if (result.type === 'success' && result.url) {
+        console.log('Callback URL received:', result.url);
         const url = new URL(result.url);
         const token = url.searchParams.get('token');
         const error = url.searchParams.get('error');
 
         if (error) {
+          console.log('Authentication error:', error);
           Alert.alert('Erro de Autenticação', 'Ocorreu um erro durante o login. Tente novamente.');
           return;
         }
 
         if (token) {
+          console.log('Token received, saving to storage');
           await AsyncStorage.setItem('access_token', token);
           router.replace('/home');
         } else {
+          console.log('No token found in callback URL');
           Alert.alert('Erro', 'Token de acesso não recebido.');
         }
       } else if (result.type === 'cancel') {
@@ -83,9 +103,12 @@ const LoginScreen = () => {
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       
       <View style={styles.logoContainer}>
-        <View style={styles.logoIcon}>
-          <Text style={{ fontSize: 48, color: '#fff' }}>🗑️</Text>
-        </View>
+
+            <Image
+              source={require('../assets/images/logo.png')}
+              style={styles.logoIcon}
+            />
+  
         <Text style={styles.title}>Trash Kan</Text>
       </View>
 

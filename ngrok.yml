@@ -1,0 +1,9 @@
+version: "2"
+authtoken: # Coloque seu authtoken aqui se tiver
+tunnels:
+  backend:
+    proto: http
+    addr: 8000
+    bind_tls: true
+    inspect: false
+    host_header: rewrite

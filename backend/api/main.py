@@ -24,8 +24,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Middleware para pular aviso do ngrok
+@app.middleware("http")
+async def add_ngrok_header(request, call_next):
+    response = await call_next(request)
+    response.headers["ngrok-skip-browser-warning"] = "true"
+    return response
 
-origins = [FRONTEND_URL]
+origins = [FRONTEND_URL,'http://localhost:8081','https://c0901bd65068.ngrok-free.app']
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
